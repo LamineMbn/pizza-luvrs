@@ -1,7 +1,7 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
     "Resources": {
-        "vpc0d9ce469": {
+        "vpc0f2c3a66": {
             "Type": "AWS::EC2::VPC",
             "Properties": {
                 "CidrBlock": "10.0.0.0/16",
@@ -16,13 +16,13 @@
                 ]
             }
         },
-        "subnet0a00807c": {
+        "subnet6fbc8106": {
             "Type": "AWS::EC2::Subnet",
             "Properties": {
                 "CidrBlock": "10.0.1.0/24",
                 "AvailabilityZone": "eu-west-3b",
                 "VpcId": {
-                    "Ref": "vpc0d9ce469"
+                    "Ref": "vpc0f2c3a66"
                 },
                 "Tags": [
                     {
@@ -32,13 +32,13 @@
                 ]
             }
         },
-        "subnet1e84ed7a": {
+        "subnetc6f5a1bd": {
             "Type": "AWS::EC2::Subnet",
             "Properties": {
                 "CidrBlock": "10.0.0.0/24",
                 "AvailabilityZone": "eu-west-3a",
                 "VpcId": {
-                    "Ref": "vpc0d9ce469"
+                    "Ref": "vpc0f2c3a66"
                 },
                 "Tags": [
                     {
@@ -48,12 +48,12 @@
                 ]
             }
         },
-        "igwb13ad2d5": {
+        "igw0bc204cde687c1fa5": {
             "Type": "AWS::EC2::InternetGateway",
             "Properties": {
             }
         },
-        "dopt949461f0": {
+        "dopt1ef1ee77": {
             "Type": "AWS::EC2::DHCPOptions",
             "Properties": {
                 "DomainName": "eu-west-3.compute.internal",
@@ -62,20 +62,45 @@
                 ]
             }
         },
-        "acl227d2d46": {
+        "acl31a3bb58": {
             "Type": "AWS::EC2::NetworkAcl",
             "Properties": {
                 "VpcId": {
-                    "Ref": "vpc0d9ce469"
+                    "Ref": "vpc0f2c3a66"
                 }
             }
         },
-        "rtbb57c56d1": {
+        "rtb055bd42c8eb2c6b95": {
             "Type": "AWS::EC2::RouteTable",
             "Properties": {
                 "VpcId": {
-                    "Ref": "vpc0d9ce469"
+                    "Ref": "vpc0f2c3a66"
                 }
+            }
+        },
+        "rtb248d6b4c": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "vpc0f2c3a66"
+                }
+            }
+        },
+        "rtb0944a83421d25bb2f": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "vpc0f2c3a66"
+                }
+            }
+        },
+        "eip1518825519": {
+            "Type": "AWS::EC2::EIP",
+            "DependsOn": [
+                "gw1"
+            ],
+            "Properties": {
+                "Domain": "vpc"
             }
         },
         "elbpizzaloader": {
@@ -84,10 +109,10 @@
             "Properties": {
                 "Subnets": [
                     {
-                        "Ref": "subnet0a00807c"
+                        "Ref": "subnet6fbc8106"
                     },
                     {
-                        "Ref": "subnet1e84ed7a"
+                        "Ref": "subnetc6f5a1bd"
                     }
                 ],
                 "HealthCheck": {
@@ -131,7 +156,6 @@
         },
         "asgpizzascaler": {
             "Type": "AWS::AutoScaling::AutoScalingGroup",
-            "DependsOn": "gw1",
             "Properties": {
                 "AvailabilityZones": [
                     "eu-west-3a",
@@ -145,26 +169,32 @@
                 "MinSize": "2",
                 "VPCZoneIdentifier": [
                     {
-                        "Ref": "subnet0a00807c"
+                        "Ref": "subnetc6f5a1bd"
                     },
                     {
-                        "Ref": "subnet1e84ed7a"
+                        "Ref": "subnet6fbc8106"
+                    }
+                ],
+                "NotificationConfigurations": [
+                    {
+                        "TopicARN": "arn:aws:sns:eu-west-3:241369606124:pizza-luvrs-email",
+                        "NotificationTypes": [
+                            "autoscaling:EC2_INSTANCE_LAUNCH",
+                            "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                            "autoscaling:EC2_INSTANCE_TERMINATE",
+                            "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+                        ]
                     }
                 ],
                 "LaunchConfigurationName": {
-                    "Ref": "lcpizzalauncher2"
+                    "Ref": "lcpizzalauncherfinalrds"
                 },
-                "LoadBalancerNames": [
-                    {
-                        "Ref": "elbpizzaloader"
-                    }
-                ],
                 "TerminationPolicies": [
                     "Default"
                 ]
             }
         },
-        "lcpizzalauncher2": {
+        "lcpizzalauncherfinalrds": {
             "Type": "AWS::AutoScaling::LaunchConfiguration",
             "Properties": {
                 "AssociatePublicIpAddress": true,
@@ -181,16 +211,15 @@
                     {
                         "DeviceName": "/dev/xvda",
                         "Ebs": {
+                            "SnapshotId": "snap-0bdbef2fbb1058772",
                             "VolumeSize": 8
                         }
                     }
-                ],
-                "UserData": "IyEvYmluL2Jhc2gNCmVjaG8gInN0YXJ0aW5nIHBpenphLWx1dnJzIg0KY2QgL2hvbWUvZWMyLXVzZXIvcGl6emEtbHV2cnMNCm5wbSBzdGFydA=="
+                ]
             }
         },
         "rdspizzadb": {
             "Type": "AWS::RDS::DBInstance",
-            "DependsOn": "gw1",
             "Properties": {
                 "AllocatedStorage": "5",
                 "AllowMajorVersionUpgrade": "false",
@@ -200,26 +229,20 @@
                 "PubliclyAccessible": "true",
                 "StorageType": "gp2",
                 "BackupRetentionPeriod": "7",
-                "MasterUsername": "awsuser",
+                "MasterUsername": "postgres",
                 "MasterUserPassword": "MyPassword",
-                "PreferredBackupWindow": "07:47-08:17",
-                "PreferredMaintenanceWindow": "mon:12:54-mon:13:24",
+                "PreferredBackupWindow": "11:26-11:56",
+                "PreferredMaintenanceWindow": "thu:00:55-thu:01:25",
                 "DBName": "MyDatabase",
                 "Engine": "postgres",
-                "EngineVersion": "9.5.2",
+                "EngineVersion": "11.5",
                 "LicenseModel": "postgresql-license",
                 "DBSubnetGroupName": {
                     "Ref": "dbsubnetdefault"
                 },
                 "VPCSecurityGroups": [
                     {
-                        "Ref": "sgrdslaunchwizard"
-                    }
-                ],
-                "Tags": [
-                    {
-                        "Key": "workload-type",
-                        "Value": "other"
+                        "Ref": "sgdefault"
                     }
                 ]
             }
@@ -266,7 +289,7 @@
                 }
             }
         },
-        "s3pizzaluvrsryanlewis": {
+        "s3pizzaluvrsbmlam": {
             "Type": "AWS::S3::Bucket",
             "Properties": {
                 "AccessControl": "Private",
@@ -274,7 +297,7 @@
                     "CorsRules": [
                         {
                             "AllowedHeaders": [
-                                "Authorization"
+                                "*"
                             ],
                             "AllowedMethods": [
                                 "GET"
@@ -294,13 +317,13 @@
         "dbsubnetdefault": {
             "Type": "AWS::RDS::DBSubnetGroup",
             "Properties": {
-                "DBSubnetGroupDescription": "default",
+                "DBSubnetGroupDescription": "Created from the RDS Management Console",
                 "SubnetIds": [
                     {
-                        "Ref": "subnet0a00807c"
+                        "Ref": "subnet6fbc8106"
                     },
                     {
-                        "Ref": "subnet1e84ed7a"
+                        "Ref": "subnetc6f5a1bd"
                     }
                 ]
             }
@@ -311,37 +334,43 @@
                 "DisplayName": "dynamodb"
             }
         },
+        "topicpizzaluvrsemail": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "DisplayName": "pizza-luvrs-email",
+                "Subscription": [
+                    {
+                        "Endpoint": "lamine.bendib@gmail.com",
+                        "Protocol": "email"
+                    }
+                ]
+            }
+        },
         "sgpizzaec2sg": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
-                "GroupDescription": "security group for pizza luvrs ec2 instances",
+                "GroupDescription": "Security group for pizza lover EC2 instances",
                 "VpcId": {
-                    "Ref": "vpc0d9ce469"
+                    "Ref": "vpc0f2c3a66"
+                }
+            }
+        },
+        "sgdefault": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "default VPC security group",
+                "VpcId": {
+                    "Ref": "vpc0f2c3a66"
                 }
             }
         },
         "sgpizzalbsg": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
-                "GroupDescription": "quick-create-1 created on Thursday, July 7, 2016 at 1:43:55 PM UTC-7",
+                "GroupDescription": "Pizza load balancer security group",
                 "VpcId": {
-                    "Ref": "vpc0d9ce469"
+                    "Ref": "vpc0f2c3a66"
                 }
-            }
-        },
-        "sgrdslaunchwizard": {
-            "Type": "AWS::EC2::SecurityGroup",
-            "Properties": {
-                "GroupDescription": "Created from the RDS Management Console",
-                "VpcId": {
-                    "Ref": "vpc0d9ce469"
-                }
-            }
-        },
-        "dbsgdefault": {
-            "Type": "AWS::RDS::DBSecurityGroup",
-            "Properties": {
-                "GroupDescription": "default"
             }
         },
         "snspolicydynamodb": {
@@ -378,7 +407,7 @@
                             },
                             "Condition": {
                                 "StringEquals": {
-                                    "AWS:SourceOwner": "180732999116"
+                                    "AWS:SourceOwner": "241369606124"
                                 }
                             }
                         }
@@ -386,18 +415,60 @@
                 }
             }
         },
-        "s3policypizzaluvrsryanlewis": {
+        "snspolicypizzaluvrsemail": {
+            "Type": "AWS::SNS::TopicPolicy",
+            "Properties": {
+                "Topics": [
+                    {
+                        "Ref": "topicpizzaluvrsemail"
+                    }
+                ],
+                "PolicyDocument": {
+                    "Version": "2008-10-17",
+                    "Id": "__default_policy_ID",
+                    "Statement": [
+                        {
+                            "Sid": "__default_statement_ID",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": "*"
+                            },
+                            "Action": [
+                                "SNS:GetTopicAttributes",
+                                "SNS:SetTopicAttributes",
+                                "SNS:AddPermission",
+                                "SNS:RemovePermission",
+                                "SNS:DeleteTopic",
+                                "SNS:Subscribe",
+                                "SNS:ListSubscriptionsByTopic",
+                                "SNS:Publish",
+                                "SNS:Receive"
+                            ],
+                            "Resource": {
+                                "Ref": "topicpizzaluvrsemail"
+                            },
+                            "Condition": {
+                                "StringEquals": {
+                                    "AWS:SourceOwner": "241369606124"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "s3policypizzaluvrsbmlam": {
             "Type": "AWS::S3::BucketPolicy",
             "Properties": {
                 "Bucket": {
-                    "Ref": "s3pizzaluvrsryanlewis"
+                    "Ref": "s3pizzaluvrsbmlam"
                 },
                 "PolicyDocument": {
                     "Version": "2012-10-17",
-                    "Id": "Policy1468466027141",
+                    "Id": "Policy1585479172203",
                     "Statement": [
                         {
-                            "Sid": "Stmt1468466021537",
+                            "Sid": "Stmt1585479171247",
                             "Effect": "Allow",
                             "Principal": "*",
                             "Action": "s3:GetObject",
@@ -407,7 +478,7 @@
                                     [
                                         "arn:aws:s3:::",
                                         {
-                                            "Ref": "s3pizzaluvrsryanlewis"
+                                            "Ref": "s3pizzaluvrsbmlam"
                                         },
                                         "/*"
                                     ]
@@ -418,40 +489,42 @@
                 }
             }
         },
-        "scalingscaledown": {
+        "scalingScaledown": {
             "Type": "AWS::AutoScaling::ScalingPolicy",
             "Properties": {
                 "AdjustmentType": "ChangeInCapacity",
-                "ScalingAdjustment": "-1",
+                "PolicyType": "SimpleScaling",
+                "ScalingAdjustment": -1,
                 "AutoScalingGroupName": {
                     "Ref": "asgpizzascaler"
                 }
             }
         },
-        "scalingscaleup": {
+        "scalingScaleup": {
             "Type": "AWS::AutoScaling::ScalingPolicy",
             "Properties": {
                 "AdjustmentType": "ChangeInCapacity",
-                "ScalingAdjustment": "1",
+                "PolicyType": "SimpleScaling",
+                "ScalingAdjustment": 1,
                 "AutoScalingGroupName": {
                     "Ref": "asgpizzascaler"
                 }
             }
         },
-        "alarmawsec2pizzascalerHighNetworkOut": {
+        "alarmawsec2pizzascalerCPUUtilizationHigh": {
             "Type": "AWS::CloudWatch::Alarm",
             "Properties": {
                 "ActionsEnabled": "true",
                 "ComparisonOperator": "GreaterThanOrEqualToThreshold",
                 "EvaluationPeriods": "1",
-                "MetricName": "NetworkOut",
+                "MetricName": "CPUUtilization",
                 "Namespace": "AWS/EC2",
                 "Period": "300",
                 "Statistic": "Average",
-                "Threshold": "5000000.0",
+                "Threshold": "60.0",
                 "AlarmActions": [
                     {
-                        "Ref": "scalingscaleup"
+                        "Ref": "scalingScaleup"
                     }
                 ],
                 "Dimensions": [
@@ -462,114 +535,26 @@
                 ]
             }
         },
-        "alarmawsec2pizzascalerLowNetworkOut": {
+        "alarmawsec2pizzascalerHighCPUUtilization": {
             "Type": "AWS::CloudWatch::Alarm",
             "Properties": {
                 "ActionsEnabled": "true",
                 "ComparisonOperator": "LessThanThreshold",
                 "EvaluationPeriods": "1",
-                "MetricName": "NetworkOut",
+                "MetricName": "CPUUtilization",
                 "Namespace": "AWS/EC2",
                 "Period": "300",
                 "Statistic": "Average",
-                "Threshold": "5000000.0",
+                "Threshold": "60.0",
                 "AlarmActions": [
                     {
-                        "Ref": "scalingscaledown"
+                        "Ref": "scalingScaledown"
                     }
                 ],
                 "Dimensions": [
                     {
                         "Name": "AutoScalingGroupName",
                         "Value": "pizza-scaler"
-                    }
-                ]
-            }
-        },
-        "alarmtoppingsReadCapacityUnitsLimitBasicAlarm": {
-            "Type": "AWS::CloudWatch::Alarm",
-            "Properties": {
-                "ActionsEnabled": "true",
-                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
-                "EvaluationPeriods": "5",
-                "MetricName": "ConsumedReadCapacityUnits",
-                "Namespace": "AWS/DynamoDB",
-                "Period": "60",
-                "Statistic": "Sum",
-                "Threshold": "240.0",
-                "AlarmActions": [
-                    "arn:aws:sns:eu-west-3:180732999116:dynamodb"
-                ],
-                "Dimensions": [
-                    {
-                        "Name": "TableName",
-                        "Value": "toppings"
-                    }
-                ]
-            }
-        },
-        "alarmtoppingsWriteCapacityUnitsLimitBasicAlarm": {
-            "Type": "AWS::CloudWatch::Alarm",
-            "Properties": {
-                "ActionsEnabled": "true",
-                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
-                "EvaluationPeriods": "5",
-                "MetricName": "ConsumedWriteCapacityUnits",
-                "Namespace": "AWS/DynamoDB",
-                "Period": "60",
-                "Statistic": "Sum",
-                "Threshold": "240.0",
-                "AlarmActions": [
-                    "arn:aws:sns:eu-west-3:180732999116:dynamodb"
-                ],
-                "Dimensions": [
-                    {
-                        "Name": "TableName",
-                        "Value": "toppings"
-                    }
-                ]
-            }
-        },
-        "alarmusersReadCapacityUnitsLimitBasicAlarm": {
-            "Type": "AWS::CloudWatch::Alarm",
-            "Properties": {
-                "ActionsEnabled": "true",
-                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
-                "EvaluationPeriods": "5",
-                "MetricName": "ConsumedReadCapacityUnits",
-                "Namespace": "AWS/DynamoDB",
-                "Period": "60",
-                "Statistic": "Sum",
-                "Threshold": "240.0",
-                "AlarmActions": [
-                    "arn:aws:sns:eu-west-3:180732999116:dynamodb"
-                ],
-                "Dimensions": [
-                    {
-                        "Name": "TableName",
-                        "Value": "users"
-                    }
-                ]
-            }
-        },
-        "alarmusersWriteCapacityUnitsLimitBasicAlarm": {
-            "Type": "AWS::CloudWatch::Alarm",
-            "Properties": {
-                "ActionsEnabled": "true",
-                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
-                "EvaluationPeriods": "5",
-                "MetricName": "ConsumedWriteCapacityUnits",
-                "Namespace": "AWS/DynamoDB",
-                "Period": "60",
-                "Statistic": "Sum",
-                "Threshold": "240.0",
-                "AlarmActions": [
-                    "arn:aws:sns:eu-west-3:180732999116:dynamodb"
-                ],
-                "Dimensions": [
-                    {
-                        "Name": "TableName",
-                        "Value": "users"
                     }
                 ]
             }
@@ -583,7 +568,7 @@
                 "RuleAction": "allow",
                 "RuleNumber": "100",
                 "NetworkAclId": {
-                    "Ref": "acl227d2d46"
+                    "Ref": "acl31a3bb58"
                 }
             }
         },
@@ -595,7 +580,7 @@
                 "RuleAction": "allow",
                 "RuleNumber": "100",
                 "NetworkAclId": {
-                    "Ref": "acl227d2d46"
+                    "Ref": "acl31a3bb58"
                 }
             }
         },
@@ -603,10 +588,10 @@
             "Type": "AWS::EC2::SubnetNetworkAclAssociation",
             "Properties": {
                 "NetworkAclId": {
-                    "Ref": "acl227d2d46"
+                    "Ref": "acl31a3bb58"
                 },
                 "SubnetId": {
-                    "Ref": "subnet0a00807c"
+                    "Ref": "subnetc6f5a1bd"
                 }
             }
         },
@@ -614,32 +599,10 @@
             "Type": "AWS::EC2::SubnetNetworkAclAssociation",
             "Properties": {
                 "NetworkAclId": {
-                    "Ref": "acl227d2d46"
+                    "Ref": "acl31a3bb58"
                 },
                 "SubnetId": {
-                    "Ref": "subnet1e84ed7a"
-                }
-            }
-        },
-        "subnetRouteTableAssociationA": {
-            "Type": "AWS::EC2::SubnetRouteTableAssociation",
-            "Properties": {
-                "SubnetId": {
-                    "Ref": "subnet0a00807c"
-                },
-                "RouteTableId": {
-                    "Ref": "rtbb57c56d1"
-                }
-            }
-        },
-        "subnetRouteTableAssociationB": {
-            "Type": "AWS::EC2::SubnetRouteTableAssociation",
-            "Properties": {
-                "SubnetId": {
-                    "Ref": "subnet1e84ed7a"
-                },
-                "RouteTableId": {
-                    "Ref": "rtbb57c56d1"
+                    "Ref": "subnetc6f5a1bd"
                 }
             }
         },
@@ -647,34 +610,45 @@
             "Type": "AWS::EC2::VPCGatewayAttachment",
             "Properties": {
                 "VpcId": {
-                    "Ref": "vpc0d9ce469"
+                    "Ref": "vpc0f2c3a66"
                 },
                 "InternetGatewayId": {
-                    "Ref": "igwb13ad2d5"
+                    "Ref": "igw0bc204cde687c1fa5"
+                }
+            }
+        },
+        "subnetroute1": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "rtb055bd42c8eb2c6b95"
+                },
+                "SubnetId": {
+                    "Ref": "subnetc6f5a1bd"
                 }
             }
         },
         "route1": {
             "Type": "AWS::EC2::Route",
-            "DependsOn": "gw1",
             "Properties": {
                 "DestinationCidrBlock": "0.0.0.0/0",
                 "RouteTableId": {
-                    "Ref": "rtbb57c56d1"
+                    "Ref": "rtb055bd42c8eb2c6b95"
                 },
                 "GatewayId": {
-                    "Ref": "igwb13ad2d5"
+                    "Ref": "igw0bc204cde687c1fa5"
                 }
-            }
+            },
+            "DependsOn": "gw1"
         },
         "dchpassoc1": {
             "Type": "AWS::EC2::VPCDHCPOptionsAssociation",
             "Properties": {
                 "VpcId": {
-                    "Ref": "vpc0d9ce469"
+                    "Ref": "vpc0f2c3a66"
                 },
                 "DhcpOptionsId": {
-                    "Ref": "dopt949461f0"
+                    "Ref": "dopt1ef1ee77"
                 }
             }
         },
@@ -699,10 +673,53 @@
                 "IpProtocol": "tcp",
                 "FromPort": "3000",
                 "ToPort": "3000",
-                "CidrIp": "0.0.0.0/0"
+                "SourceSecurityGroupId": {
+                    "Ref": "sgpizzalbsg"
+                },
+                "SourceSecurityGroupOwnerId": "241369606124"
             }
         },
         "ingress3": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgdefault"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "5432",
+                "ToPort": "5432",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgpizzaec2sg"
+                },
+                "SourceSecurityGroupOwnerId": "241369606124"
+            }
+        },
+        "ingress4": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgdefault"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "5432",
+                "ToPort": "5432",
+                "CidrIp": "90.107.2.53/32"
+            }
+        },
+        "ingress5": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "sgdefault"
+                },
+                "IpProtocol": "-1",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgdefault"
+                },
+                "SourceSecurityGroupOwnerId": "241369606124"
+            }
+        },
+        "ingress6": {
             "Type": "AWS::EC2::SecurityGroupIngress",
             "Properties": {
                 "GroupId": {
@@ -711,18 +728,6 @@
                 "IpProtocol": "tcp",
                 "FromPort": "80",
                 "ToPort": "80",
-                "CidrIp": "0.0.0.0/0"
-            }
-        },
-        "ingress4": {
-            "Type": "AWS::EC2::SecurityGroupIngress",
-            "Properties": {
-                "GroupId": {
-                    "Ref": "sgrdslaunchwizard"
-                },
-                "IpProtocol": "tcp",
-                "FromPort": "5432",
-                "ToPort": "5432",
                 "CidrIp": "0.0.0.0/0"
             }
         },
@@ -740,7 +745,7 @@
             "Type": "AWS::EC2::SecurityGroupEgress",
             "Properties": {
                 "GroupId": {
-                    "Ref": "sgpizzalbsg"
+                    "Ref": "sgdefault"
                 },
                 "IpProtocol": "-1",
                 "CidrIp": "0.0.0.0/0"
@@ -750,12 +755,12 @@
             "Type": "AWS::EC2::SecurityGroupEgress",
             "Properties": {
                 "GroupId": {
-                    "Ref": "sgrdslaunchwizard"
+                    "Ref": "sgpizzalbsg"
                 },
                 "IpProtocol": "-1",
                 "CidrIp": "0.0.0.0/0"
             }
         }
     },
-    "Description": "pizza-luvrs infrastructure"
+    "Description": "Pizza luvrs template with S3, RDS and DynamoDb integration. Fully fonctionnal"
 }

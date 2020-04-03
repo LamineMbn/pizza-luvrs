@@ -20,13 +20,13 @@
     "@hapi/inert": "5.2.1",
     "@hapi/joi": "15.1.0",
     "@hapi/vision": "5.5.2",
-    "aws-sdk": "2.488.0",
+    "aws-sdk": "2.648.0",
     "bcryptjs": "2.4.3",
     "bootflat": "2.0.4",
     "fs-extra": "8.1.0",
-    "handlebars": "4.3.0",
+    "handlebars": "^4.7.3",
     "lodash": "4.17.13",
     "pg": "7.11.0",
-    "sequelize": "5.9.4"
+    "sequelize": "^5.21.5"
   }
 }

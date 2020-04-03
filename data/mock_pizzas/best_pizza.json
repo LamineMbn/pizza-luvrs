@@ -1,6 +1,6 @@
 {
 	"name": "Best Pizza",
 	"toppings": ["dough_crust", "marinara_sauce", "mozzarella_cheese", "cheddar_cheese", "mushrooms", "pepperoni", "banana_peppers", "ham", "green_peppers"],
-	"img": "/assets/pizzas/best-pizza.png",
+	"img": "//pizza-luvrs-bmlam.s3.eu-west-3.amazonaws.com/pizzas/best-pizza.png",
 	"username": "ryan"
 }

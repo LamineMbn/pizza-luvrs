@@ -12,14 +12,14 @@ const mockPizzas = [
 ]
 
 module.exports.hydrate = () => {
-  users.create('ryan', 'pass', () => {})
-  users.create('jim', 'pass', () => {})
-  users.create('kathy', 'pass', () => {})
+  // users.create('ryan', 'pass', () => {})
+  // users.create('jim', 'pass', () => {})
+  // users.create('kathy', 'pass', () => {})
 
   for (const pizza of mockPizzas) {
     pizzas.batchImport(pizza.name, pizza.toppings, pizza.img, pizza.username)
   }
 
   // prep toppings
-  toppings.init()
+  // toppings.init()
 }
