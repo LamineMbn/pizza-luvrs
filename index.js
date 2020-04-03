@@ -5,7 +5,19 @@ const routes = require('./routes')
 
 async function startServer () {
   const server = Hapi.Server({
-    port: process.env.PORT || 3000
+    port: 3000,
+    cache: [
+      {
+        name: 'redis',
+        provider: {
+          constructor: require('@hapi/catbox-redis'),
+          options: {
+            partition: 'cache',
+            host: 'pizza-cluster.q0k72z.0001.euw3.cache.amazonaws.com'
+          }
+        }
+      }
+    ]
   })
 
   await plugins.register(server)

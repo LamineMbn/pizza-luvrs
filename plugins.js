@@ -49,6 +49,7 @@ module.exports.register = async server => {
 
   // setup cache
   const cache = server.cache({
+    cache: 'redis',
     segment: 'sessions',
     expiresIn: 24 * 60 * 60 * 1000
   })
